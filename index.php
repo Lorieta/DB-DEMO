@@ -1,32 +1,44 @@
 <?php
-require 'vendor/autoload.php';
-
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
-
-$servername = $_ENV['DB_HOST'];
-$username = $_ENV['DB_USER'];
-$password = $_ENV['DB_PASS'];
-$dbname = $_ENV['DB_NAME'];
-
-try {
-    $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-    // set the PDO error mode to exception
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    echo "Connected successfully" . "<br>";
+require 'config.php';
+require 'query.php';
 
 
-    $query = 'SELECT * FROM users';
-    $result = $conn->query($query);
-    if ($result) {
-        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-            echo "User name: " . $row['name'] . "<br>";
-        }
-    }
+$query = new Query($conn);
+//SELECT all user
+$allUsers = $query->select();
+echo "All Users" . "</br>";
+echo "<table border='1'>";
+//header
+echo "<tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Age</th>
+      </tr>";
 
+while ($user = $allUsers->fetch(PDO::FETCH_ASSOC)) {
+    //body
+    echo "<tr>";
+    echo "<td>" . $user['name'] . "</td>";
+    echo "<td>" . $user['email'] . "</td>";
+    echo "<td>" . $user['age'] . "</td>";
+    echo "</tr>";
+}
 
+echo "</table>";
 
-} catch (PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
+// SELECT single user by email
+$email = 'john.doe@example.com';
+$singleUser = $query->selectByEmail($email);
+
+if ($singleUser) {
+    echo "Single User Found:<br>" . $email;
+    echo "<table border='1'>";
+    echo "<tr>";
+    echo "<td>" . $singleUser['name'] . "</td>";
+    echo "<td>" . $singleUser['email'] . "</td>";
+    echo "<td>" . $singleUser['age'] . "</td>";
+    echo "</tr>";
+} else {
+    echo "User not found.";
 }
 ?>
